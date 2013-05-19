@@ -1,1 +1,5 @@
-name = Gigya Top Comments
+; $Id$
+name = MLS Gigya Top Content
+description = A module that fetches the aticles with the most comments from Gigya's API server side on cron
+core = 6.x
+package = MLS

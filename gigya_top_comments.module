@@ -1,0 +1,178 @@
+<?php
+/**
+ * @file
+ * Main module file for gigya_top_comments module. hans.gutknecht@mlssoccer.com
+ */
+
+/**
+ * Implementation of hook_perm().
+ *
+ */
+function gigya_top_comments_perm() {
+  return array('administer MLS Gigya');
+}
+
+/**
+ * Implementation of hook_menu().
+ *
+ */
+function gigya_top_comments_menu() {
+  $items = array();
+
+  $items['admin/settings/mls_gigya/top_comments'] = array(
+    'type' => MENU_NORMAL_ITEM,
+    'title' => t('MLS Gigya Top Comments settings'),
+    'description' => t('Settings for Gigya Top Comments'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('gigya_top_comments_form'),
+    'file' => 'gigya_top_comments.admin.inc',
+    'access callback' => 'user_access',
+    'access arguments' => array('administer MLS Gigya'),
+  );
+
+  return $items;
+}
+
+/**
+ * Implementation of hook_cron().
+ *
+ * This is temporary and will be moved into a hook_cron
+ *
+ */
+function gigya_top_comments_cron() {
+  $request_url = gigya_top_comments_gigyaAPI();
+  $request_method = 'GET';
+  $request_retry = 1;
+  $data ='';  // not required for GET
+  $request_headers='';  // not required for GET
+
+  // Send the request.
+  // print_r($request_url);
+  $result = drupal_http_request($request_url, $request_headers, $request_method, $data, $request_retry);
+  $decodedResult = json_decode($result->data);
+  
+  $max_item_age = variable_get('gigya_top_comments_max_item_age', '');
+  $current_time = time();
+  // Check for good status and some results
+  // TBD params not working need to contact gigya&& (count($decodedResult->streams) == $item_count)
+  if ($decodedResult->statusCode == 200) {
+    // Truncate table
+    $query = db_query("DELETE FROM {mls_gigya} WHERE sid IS NOT NULL");
+    // Set each content item in the db
+    foreach ($decodedResult->streams as $thread_content) {
+      //Check the age in hours of each stream
+      $item_age = round(($current_time - $thread_content->createDate/1000)/3600);
+      if ($item_age < $max_item_age && $thread_content->categoryID != 'match') {
+        $thread_content->rank = gigya_top_comments_rank($thread_content, $item_age);
+        db_query("INSERT INTO {mls_gigya} (sid, thread_count, comment_count, cat_id, url, popularity_score) VALUES ('%s', '%d', '%d', '%s', '%s', '%d')", $thread_content->streamID, $thread_content->threadCount, $thread_content->commentCount, $thread_content->categoryID, $thread_content->streamURL, $thread_content->rank);
+      }
+    }
+  }
+
+}
+
+function gigya_top_comments_rank($item, $age) {
+ $time_modifier = variable_get('gigya_top_comments_time_modifier', '');
+ $comment_modifier = variable_get('gigya_top_comments_comment_modifier', '');
+ $item_rank = pow($item->commentCount-1, $comment_modifier)/pow($age+2,$time_modifier);
+ return intval($item_rank*1000);
+}
+
+/**
+ * Build correct Gigya API call
+ *
+ */
+function gigya_top_comments_gigyaAPI() {
+
+  // Grab keys from vars set form main mls_gigya module, set method
+  $apiKey = variable_get('mls_gigya_api_key', '');
+  $secretKey = variable_get('gigya_top_comments_secretKey', '');
+  $apiMethod = 'comments.getTopStreams';
+  $timeStamp = time();
+  $nonce = $timeStamp . rand();
+
+  // The parameters for the socialize.getTopStreams API call:
+  $parameters = array(
+    'categoryID' => variable_get('gigya_top_comments_categoryID', ''),
+    'limit' => variable_get('gigya_top_comments_streams_requested_count', ''),
+    'maxStreamAge' => variable_get('gigya_top_comments_maxStreamAge', ''),
+    'includeLastComment' => variable_get('gigya_top_comments_includeLastComment', '')
+  );
+
+  // Build API call
+  $signature = _calcSignatureREST($secretKey, 'GET', $apiMethod, $parameters);
+  $requestURL = 'http://comments.gigya.com/' . $apiMethod . '?apiKey=' . urlencode($apiKey) . '&nonce=' . $nonce . '&sig=' . urlencode($signature) . '$timestamp=' . $timeStamp . '&limit=' . $parameters['limit'] . '&includeLastComment=' . $parameters['includeLastComment'] . '&maxStreamAge=' . $parameters['maxStreamAge'] . '&categoryID=' . $parameters['categoryID'];
+
+  return $requestURL;
+
+}
+
+/**
+ * Signature calculation method
+ * http://developers.gigya.com/010_Developer_Guide/85_REST/OAuth1#Common_Required_Parameters
+ *
+ */
+function _calcSignatureREST($secretKey, $httpMethod, $apiMethod, $parameters) {
+  // Require necessary Oauth protocols http://oauth.googlecode.com/svn/code/php/
+  require_once('OAuth.php');
+
+  $req = OAuthRequest::from_request($httpMethod,'http://comments.gigya.com/'.$apiMethod,$parameters);
+  $baseString = $req->get_signature_base_string();   
+  return base64_encode(hash_hmac('sha1', $baseString, base64_decode($secretKey), true));
+}
+
+
+/**
+ * Implementation of hook_block().
+ *
+ */
+function gigya_top_comments_block($op = 'list', $delta = 0, $edit = array()) {
+  switch ($op) {
+    case 'list':
+      $blocks['gigya_top_comment']['info'] = t('Gigya Top Comments Block');
+    return $blocks;
+    case 'view':
+      switch ($delta) {
+        case 'gigya_top_comment':
+          $block['subject'] = t('Popular');
+          $block['content'] = gigya_top_comments_fetch();
+          break;
+      }
+    return $block;
+  }
+}
+
+/**
+ * Implementation of hook_theme().
+ *
+ */
+function gigya_top_comments_theme() {
+  $path = drupal_get_path('module', 'gigya_top_comments');
+  return array('gigya_top_comment' => array(
+      'path' => $path . '/theme',
+      'template' => 'gigya_top_comment_block',
+      'arguments' => array('query_content' => '')
+    ),
+  );
+}
+
+/**
+ * Query for all top content per comment count.
+ *
+ */
+function gigya_top_comments_fetch() {
+  $query_content = '';
+  $limit = variable_get('gigya_top_comments_item_count', '');
+  $promoted_toggle = variable_get('gigya_top_comments_promote', '');
+  if ($promoted_toggle['promote'] == TRUE) { 
+    $result = db_query("SELECT sid, comment_count FROM (SELECT sid, comment_count, popularity_score FROM mls_gigya LEFT JOIN node ON mls_gigya.sid = node.nid WHERE node.promote = 1 ORDER BY popularity_score DESC LIMIT %d) AS SUB ORDER BY comment_count DESC", $limit);
+  }
+  else {
+    $result = db_query("SELECT sid, comment_count FROM (SELECT sid, comment_count, popularity_score FROM mls_gigya ORDER BY popularity_score DESC LIMIT %d) AS SUB ORDER BY comment_count DESC", $limit);
+  }
+  while($r = db_fetch_array($result)) {
+    $query_content[] = $r;
+  }
+  $output = theme('gigya_top_comment', $query_content);
+  return $output;
+}

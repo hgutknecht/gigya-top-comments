@@ -1,0 +1,91 @@
+<?php
+/**
+ * @file
+ * gigya_top_comments install. hans.gutknecht@mlssoccer.com
+ */
+
+/**
+ * Implementation of hook_schema().
+ *
+ */
+function gigya_top_comments_schema() {
+  $schema = array();
+
+  $schema['mls_gigya'] = array(
+    'description' => t('Stores items returned from RESTful gigya topComments API call'),
+    'fields' => array(
+      'sid' => array(
+        'description' => t('Stream ID = to nid'),
+        'type' => 'char',
+        'length' => '15',
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'thread_count' => array(
+        'description' => t('Content thread count'),
+        'type' => 'int',
+        'not null' => FALSE,
+      ),
+      'comment_count' => array(
+        'description' => t('Content comment count'),
+        'type' => 'int',
+        'not null' => FALSE,
+      ),
+      'cat_id' => array(
+        'description' => t('Content category id'),
+        'type' => 'varchar',
+        'length' => '256',
+        'not null' => FALSE,
+        'default' => '',
+      ),
+      'url' => array(
+        'description' => t('Content url'),
+        'type' => 'varchar',
+        'length' => '256',
+        'not null' => FALSE,
+      ),
+      'popularity_score' => array(
+        'description' => t('Content popularity score'),
+        'type' => 'int',
+        'not null' => FALSE,
+      ),
+    ),
+    'primary key' => array('sid'),
+  );
+
+  return $schema;
+}
+
+/**
+ * Implementation of hook_install().
+ *
+ * Perform initial setup tasks
+ *
+ */
+function gigya_top_comments_install() {
+  drupal_install_schema('gigya_top_comments');
+}
+
+/**
+ * Implementation of hook_uninstall().
+ *
+ * Perform final cleanup tasks
+ *
+ */
+function gigya_top_comments_uninstall() {
+  drupal_uninstall_schema('gigya_top_comments');
+}
+
+/**
+ * Add popularity score column to gigya_top_comments table
+ * @author Louis Jimenez
+ */
+function gigya_top_comments_update_8001() {
+  $ret = array();
+  db_add_field($ret, 'mls_gigya', 'popularity_score', array('type' => 'int'));
+  $ret[] = array(
+    'success' => TRUE,
+    'query' => "Added popularity_score column to gigya_top_comments table",
+  );
+  return $ret;
+}

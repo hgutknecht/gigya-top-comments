@@ -1,17 +1,17 @@
 <?php
 /**
  * @file
- * gigya_top_streams install. hans.gutknecht@mlssoccer.com
+ * gigya_top_comments install. hans.gutknecht@mlssoccer.com, louis.jimenez@mlssoccer.com
  */
 
 /**
  * Implements hook_schema().
  *
  */
-function gigya_top_streams_schema() {
+function gigya_top_comments_schema() {
   $schema = array();
 
-  $schema['gigya_top_streams'] = array(
+  $schema['gigya_top_comments'] = array(
     'description' => 'Stores items returned from RESTful gigya topComments API call',
     'fields' => array(
       'sid' => array(

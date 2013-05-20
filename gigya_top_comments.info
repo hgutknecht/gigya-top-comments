@@ -1,6 +1,6 @@
 ; $Id$
-name = Gigya Top Streams
-description = Fetches the streams with the most comments from Gigya's API server side on cron and displays the most popular nodes.
+name = Gigya Top Comments
+description = Fetches the most commented on streams from Gigya's API server side on cron and displays the most popular nodes.
 core = 7.x
 files[] = gigya_top_streams.module
 files[] = OAuth.php

@@ -1,17 +1,17 @@
 <?php
 /**
  * @file
- * Main module file for gigya_top_streams module. hans.gutknecht@mlssoccer.com
+ * Main module file for gigya_top_comments module. hans.gutknecht@mlssoccer.com, louis.jimenez@mlssoccer.com
  */
 
 /**
  * Implements hook_permission().
  *
  */
-function gigya_top_streams_permission() {
+function gigya_top_comments_permission() {
   return array(
-    'Administer Gigya Top Streams' => array(
-      'title' => t('Administer Gigya Top Streams')
+    'Administer Gigya Top Comments' => array(
+      'title' => t('Administer Gigya Top Comments')
     )
   );
 }
@@ -20,18 +20,18 @@ function gigya_top_streams_permission() {
  * Implements hook_menu().
  *
  */
-function gigya_top_streams_menu() {
+function gigya_top_comments_menu() {
   $items = array();
 
-  $items['admin/settings/gigya_top_streams'] = array(
+  $items['admin/settings/gigya_top_comments'] = array(
     'type' => MENU_NORMAL_ITEM,
-    'title' => 'Gigya Top Streams settings',
-    'description' => 'Settings for Gigya Top Streams',
+    'title' => 'Gigya Top Comments settings',
+    'description' => 'Settings for Gigya Top Comments',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('gigya_top_streams_form'),
-    'file' => 'gigya_top_streams.admin.inc',
+    'page arguments' => array('gigya_top_comments_form'),
+    'file' => 'gigya_top_comments.admin.inc',
     'access callback' => 'user_access',
-    'access arguments' => array('administer Gigya Top Streams'),
+    'access arguments' => array('Administer Gigya Top Comments'),
   );
 
   return $items;
@@ -40,10 +40,9 @@ function gigya_top_streams_menu() {
 /**
  * Implements hook_cron().
  *
- *
  */
-function gigya_top_streams_cron() {
-  $request_url = gigya_top_streams_gigyaAPI();
+function gigya_top_comments_cron() {
+  $request_url = gigya_top_comments_gigyaAPI();
   $request_method = 'GET';
   $request_retry = 1;
   $data ='';  // not required for GET
@@ -53,20 +52,20 @@ function gigya_top_streams_cron() {
   $result = drupal_http_request($request_url, array('headers' => $request_headers, 'method' => $request_method, 'data' => $data, 'max_redirects' => $request_retry));
   $decoded_result = json_decode($result->data);
 
-  $max_item_age = variable_get('gigya_top_streams_max_item_age', '');
+  $max_item_age = variable_get('gigya_top_comments_max_item_age', '');
   $current_time = time();
 
   // Check for good status and some results
   if ($decoded_result->statusCode == 200) {
     // Truncate table
-    db_delete('gigya_top_streams')->isNotNull('sid')->execute();
+    db_delete('gigya_top_comments')->isNotNull('sid')->execute();
     // Set each content item in the db
     foreach ($decoded_result->streams as $thread_content) {
       //Check the age in hours of each stream
       $item_age = round(($current_time - $thread_content->createDate/1000)/3600);
       if ($item_age < $max_item_age) {
-        $thread_content->rank = gigya_top_streams_rank($thread_content, $item_age);
-        db_insert('gigya_top_streams')->
+        $thread_content->rank = gigya_top_comments_rank($thread_content, $item_age);
+        db_insert('gigya_top_comments')->
           fields(array(
             'sid' => $thread_content->streamID,
             'thread_count' => $thread_content->threadCount,
@@ -85,9 +84,9 @@ function gigya_top_streams_cron() {
  * Calculate ranking score for a stream
  *
  */
-function gigya_top_streams_rank($item, $age) {
-  $time_modifier = variable_get('gigya_top_streams_time_modifier', '');
-  $comment_modifier = variable_get('gigya_top_streams_comment_modifier', '');
+function gigya_top_comments_rank($item, $age) {
+  $time_modifier = variable_get('gigya_top_comments_time_modifier', '');
+  $comment_modifier = variable_get('gigya_top_comments_comment_modifier', '');
   $item_rank = pow($item->commentCount-1, $comment_modifier)/pow($age+2, $time_modifier);
   return intval($item_rank*1000);
 }
@@ -96,19 +95,19 @@ function gigya_top_streams_rank($item, $age) {
  * Build correct Gigya API call
  *
  */
-function gigya_top_streams_gigyaAPI() {
-  $api_key = variable_get('gigya_top_streams_api_key', '');
-  $secret_key = variable_get('gigya_top_streams_secretKey', '');
+function gigya_top_comments_gigyaAPI() {
+  $api_key = variable_get('gigya_top_comments_api_key', '');
+  $secret_key = variable_get('gigya_top_comments_secretKey', '');
   $api_method = 'comments.getTopStreams';
   $time_stamp = time();
   $nonce = $time_stamp . rand();
 
   // The parameters for the socialize.getTopStreams API call:
   $parameters = array(
-    'categoryID' => variable_get('gigya_top_streams_categoryID', ''),
-    'limit' => variable_get('gigya_top_streams_streams_requested_count', ''),
-    'maxStreamAge' => variable_get('gigya_top_streams_maxStreamAge', ''),
-    'includeLastComment' => variable_get('gigya_top_streams_includeLastComment', '')
+    'categoryID' => variable_get('gigya_top_comments_categoryID', ''),
+    'limit' => variable_get('gigya_top_comments_streams_requested_count', ''),
+    'maxStreamAge' => variable_get('gigya_top_comments_maxStreamAge', ''),
+    'includeLastComment' => variable_get('gigya_top_comments_includeLastComment', '')
   );
 
   // Build API call
@@ -137,9 +136,9 @@ function _calc_signature_REST($secret_key, $http_method, $api_method, $parameter
  * Implements hook_block_info().
  *
  */
-function gigya_top_streams_block_info() {
-      $blocks['gigya_top_streams'] = array(
-        'info' => t('Gigya Top Streams Block')
+function gigya_top_comments_block_info() {
+      $blocks['gigya_top_comments'] = array(
+        'info' => t('Gigya Top Comments Block')
       );
     return $blocks;
 }
@@ -148,12 +147,12 @@ function gigya_top_streams_block_info() {
  * Implements hook_block_view().
  *
  */
-function gigya_top_streams_block_view($delta = 0) {
+function gigya_top_comments_block_view($delta = 0) {
   switch ($delta) {
-        case 'gigya_top_streams':
-          $block['subject'] = t('Gigya Top Streams');
-          $block['content'] = gigya_top_streams_fetch();
-          break;
+    case 'gigya_top_comments':
+      $block['subject'] = t('Gigya Top Comments');
+      $block['content'] = gigya_top_comments_fetch();
+      break;
   }
   return $block;
 }
@@ -162,11 +161,11 @@ function gigya_top_streams_block_view($delta = 0) {
  * Implements hook_theme().
  *
  */
-function gigya_top_streams_theme() {
-  $path = drupal_get_path('module', 'gigya_top_streams');
-  return array('gigya_top_streams' => array(
+function gigya_top_comments_theme() {
+  $path = drupal_get_path('module', 'gigya_top_comments');
+  return array('gigya_top_comments' => array(
       'path' => $path . '/theme',
-      'template' => 'gigya_top_streams_block',
+      'template' => 'gigya_top_comments_block',
       'variables' => array('query_content' => '')
     ),
   );
@@ -176,12 +175,12 @@ function gigya_top_streams_theme() {
  * Query for all top streams per popularity rank.
  *
  */
-function gigya_top_streams_fetch() {
+function gigya_top_comments_fetch() {
   $query_content = '';
-  $limit = variable_get('gigya_top_streams_item_count', '');
-  $promoted_toggle = variable_get('gigya_top_streams_promote', '');
+  $limit = variable_get('gigya_top_comments_item_count', '');
+  $promoted_toggle = variable_get('gigya_top_comments_promote', '');
   if (isset($promoted_toggle['promote']) && $promoted_toggle['promote'] == TRUE) {
-    $subquery = db_select('gigya_top_streams', 'g');
+    $subquery = db_select('gigya_top_comments', 'g');
     $subquery->fields('g', array('sid', 'comment_count', 'popularity_score'));
     $subquery->leftJoin('node', 'n', '(g.sid = n.nid)');
     $subquery->condition('n.promote', 1, '=');
@@ -194,7 +193,7 @@ function gigya_top_streams_fetch() {
     ->execute();
   }
   else {
-    $subquery = db_select('gigya_top_streams', 'g')
+    $subquery = db_select('gigya_top_comments', 'g')
     ->fields('g', array('sid', 'comment_count', 'popularity_score'))
     ->orderBy('popularity_score', 'DESC')
     ->range(0, 10);
@@ -207,6 +206,6 @@ function gigya_top_streams_fetch() {
   foreach ($result as $r) {
     $query_content[] = $r;
   }
-  $output = theme('gigya_top_streams', array('query_content' => $query_content));
+  $output = theme('gigya_top_comments', array('query_content' => $query_content));
   return $output;
 }

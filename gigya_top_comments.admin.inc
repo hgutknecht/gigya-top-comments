@@ -94,7 +94,7 @@ function gigya_top_comments_form() {
 }
 
 /*
- * Form validation
+ * Form validation for gigya_top_comments_form.
  *
  */
 function gigya_top_comments_form_validate($form, &$form_state) {

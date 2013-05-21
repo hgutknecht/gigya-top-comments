@@ -5,7 +5,7 @@
  */
 
 /**
- * Implementation of hook_perm().
+ * Implements hook_perm().
  *
  */
 function gigya_top_comments_perm() {
@@ -13,7 +13,7 @@ function gigya_top_comments_perm() {
 }
 
 /**
- * Implementation of hook_menu().
+ * Implements hook_menu().
  *
  */
 function gigya_top_comments_menu() {
@@ -34,9 +34,11 @@ function gigya_top_comments_menu() {
 }
 
 /**
- * Implementation of hook_cron().
+ * Implements of hook_cron().
  *
- * This is temporary and will be moved into a hook_cron
+ * Requests the top streams from Gigya API.
+ * Filters the results by age and calls gigya_top_comments_rank() for ranking.
+ * Writes the ranked streams to the database.
  *
  */
 function gigya_top_comments_cron() {
@@ -70,15 +72,26 @@ function gigya_top_comments_cron() {
 
 }
 
+ /**
+  * gigya_top_comments_rank
+  * Calculates ranking for a stream.
+  *
+  * @param $item: Comment stream object.
+  * @param $age: The age of the comment stream.
+  * @return An integer representing the ranking score.
+  *
+  */
 function gigya_top_comments_rank($item, $age) {
- $time_modifier = variable_get('gigya_top_comments_time_modifier', '');
- $comment_modifier = variable_get('gigya_top_comments_comment_modifier', '');
- $item_rank = pow($item->commentCount-1, $comment_modifier)/pow($age+2,$time_modifier);
- return intval($item_rank*1000);
+  $time_modifier = variable_get('gigya_top_comments_time_modifier', '');
+  $comment_modifier = variable_get('gigya_top_comments_comment_modifier', '');
+  $item_rank = pow($item->commentCount-1, $comment_modifier)/pow($age+2,$time_modifier);
+  return intval($item_rank*1000);
 }
 
 /**
+ * gigya_top_comments_gigyaAPI
  * Build correct Gigya API call
+ * @return A HTTP request url for calling Gigya API.
  *
  */
 function gigya_top_comments_gigyaAPI() {
@@ -122,7 +135,7 @@ function _calcSignatureREST($secretKey, $httpMethod, $apiMethod, $parameters) {
 
 
 /**
- * Implementation of hook_block().
+ * Implements hook_block().
  *
  */
 function gigya_top_comments_block($op = 'list', $delta = 0, $edit = array()) {
@@ -142,7 +155,7 @@ function gigya_top_comments_block($op = 'list', $delta = 0, $edit = array()) {
 }
 
 /**
- * Implementation of hook_theme().
+ * Implements hook_theme().
  *
  */
 function gigya_top_comments_theme() {
@@ -156,7 +169,9 @@ function gigya_top_comments_theme() {
 }
 
 /**
- * Query for all top content per comment count.
+ * gigya_top_comments_fetch
+ * Query for all top streams per ranking.
+ * @return Nodes to display based on ranking.
  *
  */
 function gigya_top_comments_fetch() {

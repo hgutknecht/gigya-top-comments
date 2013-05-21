@@ -84,7 +84,7 @@ function gigya_top_comments_cron() {
 }
 
 /**
- * gigya_top_comments_form_validate
+ * gigya_top_comments_rank
  * Calculates ranking for a stream.
  *
  * @param $item: Comment stream object.

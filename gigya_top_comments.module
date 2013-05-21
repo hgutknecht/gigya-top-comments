@@ -39,7 +39,10 @@ function gigya_top_comments_menu() {
 
 /**
  * Implements hook_cron().
- *
+ * 
+ * Requests the top streams from Gigya API. 
+ * Filters the results by age and calls gigya_top_comments_rank() for ranking.
+ * Writes the ranked streams to the database.
  */
 function gigya_top_comments_cron() {
   $request_url = gigya_top_comments_gigyaAPI();
@@ -81,8 +84,12 @@ function gigya_top_comments_cron() {
 }
 
 /**
- * Calculate ranking score for a stream
+ * gigya_top_comments_form_validate
+ * Calculates ranking for a stream.
  *
+ * @param $item: Comment stream object.
+ * @param $age: The age of the comment stream.
+ * @return An integer representing the ranking score.
  */
 function gigya_top_comments_rank($item, $age) {
   $time_modifier = variable_get('gigya_top_comments_time_modifier', '');
@@ -92,8 +99,10 @@ function gigya_top_comments_rank($item, $age) {
 }
 
 /**
- * Build correct Gigya API call
+ * gigya_top_comments_gigyaAPI
+ * Builds Gigya API call.
  *
+ * @return A HTTP request url for calling Gigya API.
  */
 function gigya_top_comments_gigyaAPI() {
   $api_key = variable_get('gigya_top_comments_api_key', '');
@@ -172,8 +181,10 @@ function gigya_top_comments_theme() {
 }
 
 /**
- * Query for all top streams per popularity rank.
+ * gigya_top_comments_fetch
+ * Query for all top streams per ranking.
  *
+ * @return Nodes to display based on ranking.
  */
 function gigya_top_comments_fetch() {
   $query_content = '';

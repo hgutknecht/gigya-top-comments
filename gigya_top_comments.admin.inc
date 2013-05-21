@@ -4,6 +4,13 @@
  * Common settings for Gigya. hans.gutknecht@mlssoccer.com, louis.jimenez@mlssoccer.com
  * gigya_top_comments
  */
+
+/**
+ * gigya_top_comments_form
+ * Administration form.
+ *
+ * @return Form for administering module.
+ */
 function gigya_top_comments_form() {
   $form = array();
 
@@ -110,8 +117,11 @@ function gigya_top_comments_form() {
 }
 
 /**
- * Form validation
+ * gigya_top_comments_form_validate
+ * Validates values provided for comment and time modifiers.
  *
+ * @param $form: Gigya top comments form.
+ * @param &$form_state: Reference to state of Gigya top comments form.
  */
 function gigya_top_comments_form_validate($form, &$form_state) {
   $comment_modifier = $form_state['values']['gigya_top_comments_comment_modifier'];

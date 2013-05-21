@@ -1,5 +1,3 @@
-; $Id$
 name = Gigya Top Comments
-description = A module that fetches the aticles with the most comments from Gigya's API server side on cron.
+description = Fetches the most commented on streams from Gigya's API server side on cron and displays the most popular nodes.
 core = 6.x
-package = MLS

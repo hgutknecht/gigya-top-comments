@@ -84,7 +84,7 @@ function gigya_top_comments_cron() {
 function gigya_top_comments_rank($item, $age) {
   $time_modifier = variable_get('gigya_top_comments_time_modifier', '');
   $comment_modifier = variable_get('gigya_top_comments_comment_modifier', '');
-  $item_rank = pow($item->commentCount-1, $comment_modifier)/pow($age+2,$time_modifier);
+  $item_rank = pow($item->commentCount-1, $comment_modifier)/pow($age+2, $time_modifier);
   return intval($item_rank*1000);
 }
 
@@ -128,9 +128,9 @@ function _calcSignatureREST($secretKey, $httpMethod, $apiMethod, $parameters) {
   // Require necessary Oauth protocols http://oauth.googlecode.com/svn/code/php/
   require_once('OAuth.php');
 
-  $req = OAuthRequest::from_request($httpMethod,'http://comments.gigya.com/'.$apiMethod,$parameters);
+  $req = OAuthRequest::from_request($httpMethod, 'http://comments.gigya.com/' . $apiMethod, $parameters);
   $baseString = $req->get_signature_base_string();   
-  return base64_encode(hash_hmac('sha1', $baseString, base64_decode($secretKey), true));
+  return base64_encode(hash_hmac('sha1', $baseString, base64_decode($secretKey), TRUE));
 }
 
 
@@ -179,12 +179,12 @@ function gigya_top_comments_fetch() {
   $limit = variable_get('gigya_top_comments_item_count', '');
   $promoted_toggle = variable_get('gigya_top_comments_promote', '');
   if ($promoted_toggle['promote'] == TRUE) { 
-    $result = db_query("SELECT sid, comment_count FROM (SELECT sid, comment_count, popularity_score FROM mls_gigya LEFT JOIN node ON mls_gigya.sid = node.nid WHERE node.promote = 1 ORDER BY popularity_score DESC LIMIT %d) AS SUB ORDER BY comment_count DESC", $limit);
+    $result = db_query("SELECT sid, comment_count FROM (SELECT sid, comment_count, popularity_score FROM {mls_gigya} LEFT JOIN node ON mls_gigya.sid = node.nid WHERE node.promote = 1 ORDER BY popularity_score DESC LIMIT %d) AS SUB ORDER BY comment_count DESC", $limit);
   }
   else {
-    $result = db_query("SELECT sid, comment_count FROM (SELECT sid, comment_count, popularity_score FROM mls_gigya ORDER BY popularity_score DESC LIMIT %d) AS SUB ORDER BY comment_count DESC", $limit);
+    $result = db_query("SELECT sid, comment_count FROM (SELECT sid, comment_count, popularity_score FROM {mls_gigya} ORDER BY popularity_score DESC LIMIT %d) AS SUB ORDER BY comment_count DESC", $limit);
   }
-  while($r = db_fetch_array($result)) {
+  while ($r = db_fetch_array($result)) {
     $query_content[] = $r;
   }
   $output = theme('gigya_top_comment', $query_content);

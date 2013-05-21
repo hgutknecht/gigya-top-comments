@@ -1,3 +1,10 @@
+<<<<<<< HEAD
 name = Gigya Top Comments
 description = Fetches the most commented on streams from Gigya's API server side on cron and displays the most popular nodes.
 core = 6.x
+=======
+; $Id$
+name = Gigya Top Comments
+description = Fetches the most commented on streams from Gigya's API server side on cron and displays the most popular nodes.
+core = 6.x
+>>>>>>> ffef1a17ce38fb669f406ae791f776f25576b5e5

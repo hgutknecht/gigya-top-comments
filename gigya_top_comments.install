@@ -11,7 +11,7 @@
 function gigya_top_comments_schema() {
   $schema = array();
 
-  $schema['mls_gigya'] = array(
+  $schema['gigya_top_comments'] = array(
     'description' => t('Stores items returned from RESTful gigya topComments API call'),
     'fields' => array(
       'sid' => array(
@@ -82,7 +82,7 @@ function gigya_top_comments_uninstall() {
  */
 function gigya_top_comments_update_8001() {
   $ret = array();
-  db_add_field($ret, 'mls_gigya', 'popularity_score', array('type' => 'int'));
+  db_add_field($ret, 'gigya_top_comments', 'popularity_score', array('type' => 'int'));
   $ret[] = array(
     'success' => TRUE,
     'query' => "Added popularity_score column to gigya_top_comments table",

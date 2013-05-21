@@ -9,7 +9,7 @@
  *
  */
 function gigya_top_comments_perm() {
-  return array('administer MLS Gigya');
+  return array('administer gigya top comments');
 }
 
 /**
@@ -19,15 +19,15 @@ function gigya_top_comments_perm() {
 function gigya_top_comments_menu() {
   $items = array();
 
-  $items['admin/settings/mls_gigya/top_comments'] = array(
+  $items['admin/settings/gigya_top_comments/top_comments'] = array(
     'type' => MENU_NORMAL_ITEM,
-    'title' => t('MLS Gigya Top Comments settings'),
+    'title' => t('Gigya Top Comments settings'),
     'description' => t('Settings for Gigya Top Comments'),
     'page callback' => 'drupal_get_form',
     'page arguments' => array('gigya_top_comments_form'),
     'file' => 'gigya_top_comments.admin.inc',
     'access callback' => 'user_access',
-    'access arguments' => array('administer MLS Gigya'),
+    'access arguments' => array('administer gigya top comments'),
   );
 
   return $items;
@@ -47,7 +47,6 @@ function gigya_top_comments_cron() {
   $request_headers='';  // not required for GET
 
   // Send the request.
-  // print_r($request_url);
   $result = drupal_http_request($request_url, $request_headers, $request_method, $data, $request_retry);
   $decodedResult = json_decode($result->data);
   
@@ -108,7 +107,7 @@ function gigya_top_comments_gigyaAPI() {
 }
 
 /**
- * Signature calculation method
+ * Signature calculation method.
  * http://developers.gigya.com/010_Developer_Guide/85_REST/OAuth1#Common_Required_Parameters
  *
  */

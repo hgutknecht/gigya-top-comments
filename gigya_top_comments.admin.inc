@@ -94,14 +94,6 @@ function gigya_top_comments_form() {
     '#required' => TRUE,
   );
 
-  $form['gigya_top_comments_google_analytics_queue'] = array(
-    '#title' => t('Google Analytics Queue'),
-    '#type' => 'textfield',
-    '#default_value' => variable_get('gigya_top_comments_google_analytics_queue', ''),
-    '#description' => t('Enter the name of the queue that will be applied to Google Analytics onClick event for each displayed node'),
-    '#required' => FALSE,
-  );
-
   $form['gigya_top_comments_promote'] = array(
     '#title' => t('Promoted to Front Page Toggle'),
     '#type' => 'checkboxes',

@@ -11,7 +11,7 @@ function gigya_top_comments_form() {
     '#title' => t('Comments Category'),
     '#type' => 'textfield',
     '#default_value' => variable_get('gigya_top_comments_categoryID', ''),
-    '#description' => t('The identifier of the comments category from which to retrieve the top streams. If this parameter is not specified, the method returns the top streams for articles, blogs, and videos.'),
+    '#description' => t('The identifier of the comments category from which to retrieve the top streams. If this parameter is not specified, the method will return all comment categories.'),
     '#required' => FALSE,
   );
 

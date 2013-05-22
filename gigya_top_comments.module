@@ -48,8 +48,8 @@ function gigya_top_comments_cron() {
   $request_url = gigya_top_comments_gigyaAPI();
   $request_method = 'GET';
   $request_retry = 1;
-  $data ='';  // not required for GET
-  $request_headers= array();  // not required for GET
+  $data = '';  // not required for GET
+  $request_headers = array();  // not required for GET
 
   // Send the request.
   $result = drupal_http_request($request_url, array('headers' => $request_headers, 'method' => $request_method, 'data' => $data, 'max_redirects' => $request_retry));

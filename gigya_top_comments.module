@@ -217,6 +217,6 @@ function gigya_top_comments_fetch() {
   foreach ($result as $r) {
     $query_content[] = $r;
   }
-  $output = theme('gigya_top_comments', array('query_content' => $query_content));
+  $output = !empty($query_content) ? theme('gigya_top_comments', array('query_content' => $query_content)) : '';
   return $output;
 }

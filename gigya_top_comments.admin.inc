@@ -14,6 +14,22 @@
 function gigya_top_comments_form() {
   $form = array();
 
+  $form['gigya_top_comments_api_key'] = array(
+    '#title' => t('Site Gigya Api key'),
+    '#type' => 'textfield',
+    '#default_value' => variable_get('gigya_top_comments_api_key', ''),
+    '#description' => t('Your API key can be found on the dashboard of the Gigya website.'),
+    '#required' => TRUE,
+  );
+
+  $form['gigya_top_comments_secretKey'] = array(
+    '#title' => t('Gigya SecretKey'),
+    '#type' => 'textfield',
+    '#default_value' => variable_get('gigya_top_comments_secretKey', ''),
+    '#description' => t('Your secret key can be found at the bottom of the Site Setup page on the Gigya website.'),
+    '#required' => TRUE,
+  );
+
   $form['gigya_top_comments_categoryID'] = array(
     '#title' => t('Comments Category ID'),
     '#type' => 'textfield',
@@ -78,24 +94,8 @@ function gigya_top_comments_form() {
     '#required' => FALSE,
   );
 
-  $form['gigya_top_comments_api_key'] = array(
-    '#title' => t('Site Gigya Api key'),
-    '#type' => 'textfield',
-    '#default_value' => variable_get('gigya_top_comments_api_key', ''),
-    '#description' => t('Your API key can be found on the dashboard of the Gigya website.'),
-    '#required' => TRUE,
-  );
-
-  $form['gigya_top_comments_secretKey'] = array(
-    '#title' => t('Gigya SecretKey'),
-    '#type' => 'textfield',
-    '#default_value' => variable_get('gigya_top_comments_secretKey', ''),
-    '#description' => t('Your secret key can be found at the bottom of the Site Setup page on the Gigya website.'),
-    '#required' => TRUE,
-  );
-
   $form['gigya_top_comments_promote'] = array(
-    '#title' => t('Promoted to Front Page Toggle'),
+    '#title' => t('Promoted to Front Page'),
     '#type' => 'checkboxes',
     '#options' => array(
       'promote' => t('Display only nodes that have been promoted to the front page?')

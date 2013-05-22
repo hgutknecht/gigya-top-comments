@@ -7,9 +7,15 @@
   foreach ($query_content as $article) {
     $article_content = node_load($article['sid']);
     $node_path = 'node/' . $article['sid'];
-    print '<li class="top_content_item">';
+    if ($article_content) {
+      print '<li class="top_content_item">';
       print '<span class="comment_count">' . l($article['comment_count'], $node_path) . '</span>';
       print '<div class="meta"><span class="article_title">' . l($node_title, $node_path) . '</span>';
+    }
+    else {
+      print '<li class="top_content_item">';
+      print '<div class="meta"><span class="node_title">Content not found. Stream ID ' . $stream->sid . ' does not match any node ID\'s.</span>'; 
+    }
     if ($i == $length - 1) {
       print '</div></li>';
     }

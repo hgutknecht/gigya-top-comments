@@ -23,7 +23,7 @@ function gigya_top_comments_permission() {
 function gigya_top_comments_menu() {
   $items = array();
 
-  $items['admin/settings/gigya_top_comments'] = array(
+  $items['admin/config/gigya_top_comments'] = array(
     'type' => MENU_NORMAL_ITEM,
     'title' => 'Gigya Top Comments settings',
     'description' => 'Settings for Gigya Top Comments',
@@ -116,12 +116,15 @@ function gigya_top_comments_gigyaAPI() {
     'categoryID' => variable_get('gigya_top_comments_categoryID', ''),
     'limit' => variable_get('gigya_top_comments_streams_requested_count', ''),
     'maxStreamAge' => variable_get('gigya_top_comments_maxStreamAge', ''),
-    'includeLastComment' => variable_get('gigya_top_comments_includeLastComment', '')
+    'includeLastComment' => variable_get('gigya_top_comments_includeLastComment', ''),
+    'timestamp' => $time_stamp,
+    'apiKey' => $api_key,
+    'nonce' => $nonce    
   );
 
   // Build API call
   $signature = _calc_signature_REST($secret_key, 'GET', $api_method, $parameters);
-  $request_url = 'http://comments.gigya.com/' . $api_method . '?apiKey=' . urlencode($api_key) . '&nonce=' . $nonce . '&sig=' . urlencode($signature) . '$time_stamp=' . $time_stamp . '&limit=' . $parameters['limit'] . '&includeLastComment=' . $parameters['includeLastComment'] . '&maxStreamAge=' . $parameters['maxStreamAge'] . '&categoryID=' . $parameters['categoryID'];
+  $request_url = 'http://comments.gigya.com/' . $api_method . '?apiKey=' . urlencode($api_key) . '&nonce=' . $nonce . '&sig=' . urlencode($signature) . '&timestamp=' . $time_stamp . '&limit=' . $parameters['limit'] . '&includeLastComment=' . $parameters['includeLastComment'] . '&maxStreamAge=' . $parameters['maxStreamAge'] . '&categoryID=' . $parameters['categoryID'];
 
   return $request_url;
 }
@@ -217,6 +220,13 @@ function gigya_top_comments_fetch() {
   foreach ($result as $r) {
     $query_content[] = $r;
   }
-  $output = !empty($query_content) ? theme('gigya_top_comments', array('query_content' => $query_content)) : '';
+  if (!empty($query_content)) {
+    $output = theme('gigya_top_comments', array('query_content' => $query_content));
+  }
+  else {
+    watchdog('gigya_top_comments', 'The Gigya Top Comments block was unable to retrieve any comment streams. Try running cron.');
+    $output = '';
+  }
+
   return $output;
 }

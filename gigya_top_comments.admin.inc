@@ -89,11 +89,9 @@ function gigya_top_comments_form() {
 
   $form['gigya_top_comments_promote'] = array(
     '#title' => t('Promoted to Front Page'),
-    '#type' => 'checkboxes',
-    '#options' => array(
-      'promote' => t('Display only content that has been promoted to the front page?')
-    ),
-    '#default_value' => variable_get('gigya_top_comments_promote', '')
+    '#type' => 'checkbox',
+    '#description' => t('Display only content that has been promoted to the front page?'),
+    '#default_value' => variable_get('gigya_top_comments_promote', '0')
   );
 
   $form = system_settings_form($form);

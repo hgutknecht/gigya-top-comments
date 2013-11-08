@@ -41,34 +41,35 @@ function gigya_top_comments_menu() {
  * Writes the ranked streams to the database.
  *
  */
-function gigya_top_comments_init() {
+function gigya_top_comments_cron() {
   $request_url = gigya_top_comments_gigyaAPI();
-  $request_method = 'GET';
-  $request_retry = 1;
-  $data = '';  // not required for GET
-  $request_headers = array();  // not required for GET
-  // Send the request.
-  $result = drupal_http_request($request_url, $request_headers, $request_method, $data, $request_retry);
-  $decodedResult = json_decode($result->data);
-  
-  $max_item_age = variable_get('gigya_top_comments_max_item_age', '');
-  $current_time = time();
-  // Check for good status and some results
-  // TBD params not working need to contact gigya&& (count($decodedResult->streams) == $item_count)
-  if ($decodedResult->statusCode == 200) {
-    // Truncate table
-    $query = db_query("DELETE FROM {gigya_top_comments} WHERE sid IS NOT NULL");
-    // Set each content item in the db
-    foreach ($decodedResult->streams as $thread_content) {
-      //Check the age in hours of each stream
-      $item_age = round(($current_time - $thread_content->createDate/1000)/3600);
-      if ($item_age < $max_item_age && $thread_content->categoryID != 'match') {
-        $thread_content->rank = gigya_top_comments_rank($thread_content, $item_age);
-        db_query("INSERT INTO {gigya_top_comments} (sid, thread_count, comment_count, cat_id, url, popularity_score) VALUES ('%s', '%d', '%d', '%s', '%s', '%d')", $thread_content->streamID, $thread_content->threadCount, $thread_content->commentCount, $thread_content->categoryID, $thread_content->streamURL, $thread_content->rank);
+
+  if ($request_url) {
+    $request_method = 'GET';
+    $request_retry = 1;
+    $data = '';  // not required for GET
+    $request_headers = array();  // not required for GET
+    // Send the request.
+    $result = drupal_http_request($request_url, $request_headers, $request_method, $data, $request_retry);
+    $decodedResult = json_decode($result->data);
+    
+    $max_item_age = variable_get('gigya_top_comments_max_item_age', '');
+    $current_time = time();
+    // Check for good status and some results
+    if ($decodedResult->statusCode == 200) {
+      // Truncate table
+      $query = db_query("DELETE FROM {gigya_top_comments} WHERE sid IS NOT NULL");
+      // Set each content item in the db
+      foreach ($decodedResult->streams as $thread_content) {
+        //Check the age in hours of each stream
+        $item_age = round(($current_time - $thread_content->createDate/1000)/3600);
+        if ($item_age < $max_item_age && $thread_content->categoryID != 'match') {
+          $thread_content->rank = gigya_top_comments_rank($thread_content, $item_age);
+          db_query("INSERT INTO {gigya_top_comments} (sid, thread_count, comment_count, cat_id, url, popularity_score) VALUES ('%s', '%d', '%d', '%s', '%s', '%d')", $thread_content->streamID, $thread_content->threadCount, $thread_content->commentCount, $thread_content->categoryID, $thread_content->streamURL, $thread_content->rank);
+        }
       }
     }
   }
-
 }
 
  /**
@@ -94,28 +95,34 @@ function gigya_top_comments_rank($item, $age) {
  *
  */
 function gigya_top_comments_gigyaAPI() {
-
   // Grab keys from vars, set method
-  $apiKey = variable_get('gigya_top_comments_api_key', '');
-  $secretKey = variable_get('gigya_top_comments_secretKey', '');
-  $apiMethod = 'comments.getTopStreams';
-  $timeStamp = time();
-  $nonce = $timeStamp . rand();
+  $api_key = variable_get('gigya_top_comments_api_key', '');
+  $secret_key = variable_get('gigya_top_comments_secretKey', '');
+  if ($api_key && $secret_key) {
+    $api_method = 'comments.getTopStreams';
+    $time_stamp = time();
+    $nonce = $time_stamp . rand();
 
-  // The parameters for the socialize.getTopStreams API call:
-  $parameters = array(
-    'categoryID' => variable_get('gigya_top_comments_categoryID', ''),
-    'limit' => variable_get('gigya_top_comments_streams_requested_count', ''),
-    'maxStreamAge' => variable_get('gigya_top_comments_maxStreamAge', ''),
-    'includeLastComment' => variable_get('gigya_top_comments_includeLastComment', '')
-  );
+    // The parameters for the socialize.getTopStreams API call:
+    $parameters = array(
+      'categoryID' => variable_get('gigya_top_comments_categoryID', ''),
+      'limit' => variable_get('gigya_top_comments_streams_requested_count', ''),
+      'maxStreamAge' => variable_get('gigya_top_comments_maxStreamAge', ''),
+      'includeLastComment' => variable_get('gigya_top_comments_includeLastComment', ''),
+      'timestamp' => $time_stamp,
+      'apiKey' => $api_key,
+      'nonce' => $nonce    
+    );
 
-  // Build API call
-  $signature = _calcSignatureREST($secretKey, 'GET', $apiMethod, $parameters);
-  $requestURL = 'http://comments.gigya.com/' . $apiMethod . '?apiKey=' . urlencode($apiKey) . '&nonce=' . $nonce . '&sig=' . urlencode($signature) . '$timestamp=' . $timeStamp . '&limit=' . $parameters['limit'] . '&includeLastComment=' . $parameters['includeLastComment'] . '&maxStreamAge=' . $parameters['maxStreamAge'] . '&categoryID=' . $parameters['categoryID'];
+    // Build API call
+    $signature = _calcSignatureREST($secret_key, 'GET', $api_method, $parameters);
+    $request_URL = 'http://comments.gigya.com/' . $api_method . '?apiKey=' . urlencode($api_key) . '&nonce=' . $nonce . '&sig=' . urlencode($signature) . '&timestamp=' . $time_stamp . '&limit=' . $parameters['limit'] . '&includeLastComment=' . $parameters['includeLastComment'] . '&maxStreamAge=' . $parameters['maxStreamAge'] . '&categoryID=' . $parameters['categoryID'];
 
-  return $requestURL;
-
+    return $request_URL;
+  }
+  else {
+    return '';
+  }
 }
 
 /**
@@ -177,7 +184,7 @@ function gigya_top_comments_fetch() {
   $query_content = '';
   $limit = variable_get('gigya_top_comments_item_count', '');
   $promoted_toggle = variable_get('gigya_top_comments_promote', '');
-  if ($promoted_toggle['promote'] == TRUE) { 
+  if ($promoted_toggle) { 
     $result = db_query("SELECT sid, comment_count FROM (SELECT sid, comment_count, popularity_score FROM {gigya_top_comments} LEFT JOIN node ON gigya_top_comments.sid = node.nid WHERE node.promote = 1 ORDER BY popularity_score DESC LIMIT %d) AS SUB ORDER BY comment_count DESC", $limit);
   }
   else {
@@ -186,6 +193,14 @@ function gigya_top_comments_fetch() {
   while ($r = db_fetch_array($result)) {
     $query_content[] = $r;
   }
-  $output = !empty($query_content) ? theme('gigya_top_comment', $query_content) : '';
+
+  if (!empty($query_content)) {
+    $output = theme('gigya_top_comment', $query_content);
+  }
+  else {
+    watchdog('gigya_top_comments', 'The Gigya Top Comments block was unable to retrieve any comment streams. Try running cron.');
+    $output = '';
+  }
+   
   return $output;
 }

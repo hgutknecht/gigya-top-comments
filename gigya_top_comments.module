@@ -162,7 +162,7 @@ function gigya_top_comments_block_info() {
 function gigya_top_comments_block_view($delta = 0) {
   switch ($delta) {
     case 'gigya_top_comments':
-      $block['subject'] = t('Gigya Top Comments');
+      $block['subject'] = t(variable_get('gigya_top_comments_block_title', 'Popular'));
       $block['content'] = gigya_top_comments_fetch();
       break;
   }

@@ -39,8 +39,8 @@ function gigya_top_comments_menu() {
 
 /**
  * Implements hook_cron().
- * 
- * Requests the top streams from Gigya API. 
+ *
+ * Requests the top streams from Gigya API.
  * Filters the results by age and calls gigya_top_comments_rank() for ranking.
  * Writes the ranked streams to the database.
  */
@@ -119,7 +119,7 @@ function gigya_top_comments_gigyaAPI() {
     'includeLastComment' => variable_get('gigya_top_comments_includeLastComment', ''),
     'timestamp' => $time_stamp,
     'apiKey' => $api_key,
-    'nonce' => $nonce    
+    'nonce' => $nonce
   );
 
   // Build API call
@@ -218,7 +218,19 @@ function gigya_top_comments_fetch() {
     ->execute();
   }
   foreach ($result as $r) {
-    $query_content[] = $r;
+    $stream_id = $r->sid;
+    $formatted_result = array(
+      'empty' => TRUE,
+      'nid' => $stream_id,
+      'comment_count' => $r->comment_count,
+    );
+    // Check to see if node exists.
+    $sys_node = node_load($stream_id);
+    if ($sys_node) {
+      $formatted_result['empty'] = FALSE;
+      $formatted_result['node'] = $sys_node;
+    }
+    $query_content[] = $formatted_result;
   }
   if (!empty($query_content)) {
     $output = theme('gigya_top_comments', array('query_content' => $query_content));
@@ -227,6 +239,6 @@ function gigya_top_comments_fetch() {
     watchdog('gigya_top_comments', 'The Gigya Top Comments block was unable to retrieve any comment streams. Try running cron.');
     $output = '';
   }
-
   return $output;
+
 }

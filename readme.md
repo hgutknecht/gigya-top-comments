@@ -1,12 +1,11 @@
 # gigya_top_comments
 
 ## Dependencies
-- Contributed module dependencies ()
-- Custom module dependencies ()
+None
 
 ## Version / Author
-1.0(d6) /Hans Gutknecht, hans.gutknecht@mlssoccer.com
-1.1(d7) /Louis Jimenez, louis.jimenez@mlssoccer.com
+Hans Gutknecht, hans.gutknecht@mlssoccer.com  
+Louis Jimenez, louis.jimenez@mlssoccer.com
 
 ## Description
 
